@@ -1,0 +1,62 @@
+#!/bin/bash
+
+echo "Chmac 1.0"
+echo ""
+echo "Print my MAC - 1"
+echo "Generate and change MAC - 2"
+echo "Generate and change MAC every n minutes(while terminal is working) - 3"
+echo "Exit - 4"
+
+read -n 1 -p "Сhoose an option(1/2/3/4):" ANSWER
+
+hexchars="0123456789ABCDEF"
+
+if [ "$ANSWER" = "1" ] ; then
+	a=$(ifconfig en0 ether | sed '1d; s/ether //')
+	echo ""
+	echo "Your MAC is: "$a
+#
+#
+elif [ "$ANSWER" = "2" ] ; then
+	a=$(ifconfig en0 ether | sed '1d; s/ether //')
+	echo ""
+	echo "Your MAC is: "$a
+	read -n 1 -p "Do you want to change your MAC? (y/[a]): " AMSURE
+	[ "$AMSURE" = "y" ] || exit
+	
+	end=$( for i in {1..10} ; do echo -n ${hexchars:$(( $RANDOM % 16 )):1} ; done | sed -e 's/\(..\)/:\1/g' )
+
+	echo ""
+	echo "New Mac: 00$end"
+	
+	ifconfig en0 ether 00$end
+	echo "" 1>&2
+	exit
+#
+#
+elif [ "$ANSWER" = "3" ] ; then
+	echo ""
+	read -p "Input time interval for MAC change(min): " TIME 
+	if ! [[ "$TIME" =~ ^[0-9]+$ ]];	then
+		echo "Wrong type"
+	fi
+	while true ; do
+		sleep $(($TIME*60))
+		end=$( for i in {1..10} ; do echo -n ${hexchars:$(( $RANDOM % 16 )):1} ; done | sed -e 's/\(..\)/:\1/g' )
+       		echo ""
+        	echo "New Mac: 00$end"
+        	ifconfig en0 ether 00$end
+	done	
+
+#
+#
+elif [ "$ANSWER" = "4" ] ; then
+	echo ""
+	echo "Exit"
+#
+#
+else
+	echo ""
+	echo "Error, wrong type of key"
+	exit 1 
+fi
